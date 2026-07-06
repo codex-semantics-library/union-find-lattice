@@ -1,0 +1,49 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;  This file is part of the Codex semantics library                      ;;
+;;    (Union-find lattice subcomponent).                                  ;;
+;;                                                                        ;;
+;;  Copyright (C) 2026                                                    ;;
+;;    CEA (Commissariat à l'énergie atomique et aux énergies              ;;
+;;         alternatives)                                                  ;;
+;;                                                                        ;;
+;;  you can redistribute it and/or modify it under the terms of the GNU   ;;
+;;  Lesser General Public License as published by the Free Software       ;;
+;;  Foundation, version 2.1.                                              ;;
+;;                                                                        ;;
+;;  It is distributed in the hope that it will be useful,                 ;;
+;;  but WITHOUT ANY WARRANTY; without even the implied warranty of        ;;
+;;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         ;;
+;;  GNU Lesser General Public License for more details.                   ;;
+;;                                                                        ;;
+;;  See the GNU Lesser General Public License version 3.0                 ;;
+;;  for more details (enclosed in the file LICENSE).                      ;;
+;;                                                                        ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(include_subdirs qualified)
+
+(library
+ (public_name union-find-lattice)
+ (name Union_Find_Lattice)
+ (modules_without_implementation parameters sig)
+ (libraries
+  patricia-tree
+  union-find-lattice.persistent-array
+  union-find-lattice.utils)
+ (flags
+  ; Disabled warnings:
+  ; 4 - fragile pattern matching, any match with a catch-all clause
+  ; 67 - Unused functor paramater, this is useful in ML but forces you to call
+  ;      parameters `_` in MLI files, which is annoying as names can be informative
+  ; 40 - name out of scope, when matching a value with known type, we can omit
+  ;      the module prefix of its constructors, this is more concise
+  ; 41 - ambiguous name, record label name used by multiple types
+  ; 42 - disambiguated name, same as 40 ?
+  (:standard -w +A-4-67-40-41-42)))
+
+(documentation
+ (package union-find-lattice))
+
+(mdx
+ (files *.mld *.mli)
+ (libraries union-find-lattice))
