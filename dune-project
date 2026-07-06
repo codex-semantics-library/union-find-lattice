@@ -47,7 +47,7 @@
   "Persistent union-find data-structures with lattice operations (order, meet, join)")
  (depends
   ocaml
-  patricia-tree
+  (patricia-tree (>= 0.14.0))
   (qcheck (and (> 0.90.0) :with-test))
   (mdx :with-test)
   (zarith :with-test)

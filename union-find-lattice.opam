@@ -20,7 +20,7 @@ bug-reports:
 depends: [
   "dune" {>= "3.21"}
   "ocaml"
-  "patricia-tree"
+  "patricia-tree" {>= "0.14.0"}
   "qcheck" {> "0.90.0" & with-test}
   "mdx" {with-test}
   "zarith" {with-test}
