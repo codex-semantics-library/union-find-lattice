@@ -189,10 +189,14 @@ struct
       match Array.get v.parents n with
       | Wrap(Root{value=Some v; self}) -> iter (set_value ~intersect:true res self v) (n-1) errs
       | Wrap(Uninitialized) | Wrap(Root _) -> iter res (n-1) errs
-      | Wrap(Child{self;parent; relation}) ->
+      | Wrap(Child{self;parent;relation}) ->
           match add_relation res self parent relation with
           | Ok res -> iter res (n-1) errs
-          | Error _ -> iter res (n-1) (Rel(self, relation, parent)::errs)
+          | Error _ ->
+              let res = match get_value v self with
+              | None -> res
+              | Some v -> set_value ~intersect:true res self v in
+              iter res (n-1) (Rel(self, relation, parent)::errs)
     in iter (copy u) (Array.length u.parents - 1) []
 
   (** {2 Incl}                                                        *)
@@ -455,7 +459,12 @@ struct
       match vb with
       | Some(Child{parent;relation;_}) -> begin match add_relation res x parent relation with
           | Ok res -> (res, errs)
-          | Error _ -> (res, Rel(x, relation, parent) :: errs) end
+          | Error _ ->
+              let value = get_value b x in
+              let res = match value with
+                | None -> res
+                | Some v ->set_value ~intersect:true res x v in
+              res, Rel(x, relation, parent) :: errs end
       | Some(Root{value=Some v;_}) -> set_value ~intersect:true res x v, errs
       | _ -> acc
      } a.parents b.parents (a, [])
@@ -819,7 +828,7 @@ struct
 
   type interim =
     | Check_Value: 'a node * 'a value -> interim
-    | Check_Rel: 'a node * 'b node * ('a,'b) relation -> interim
+    | Check_Rel: 'a node * 'b node * ('a,'b) relation * 'a value option -> interim
 
   type wrapped_relation =
     Rel: 'a node * ('a, 'b) relation * 'b node -> wrapped_relation
@@ -831,13 +840,18 @@ struct
     |> List.filter_map (fun x ->
           match get ~default:uninitialized v.parents x with
           | Wrap(Root {self; value=Some value}) -> Some (Check_Value (self, value))
-          | Wrap(Child { self; parent; relation}) -> Some (Check_Rel (self, parent, relation))
+          | Wrap(Child { self; parent; relation}) -> Some (Check_Rel (self, parent, relation, get_value v self))
           | Wrap(Root _) | Wrap Uninitialized -> None)
     |> List.fold_left (fun (res, errs) elt -> match elt with
           | Check_Value(x,v) -> set_value ~intersect:true res x v, errs
-          | Check_Rel(x,px,rel) -> match add_relation res x px rel with
+          | Check_Rel(x,px,rel,v) -> match add_relation res x px rel with
               | Ok r -> r, errs
-              | Error _ -> res, Rel(x,rel,px)::errs) (u, [])
+              | Error _ ->
+                (* We can't recover this relation, but we can keep its value *)
+                let res = match v with
+                  | None -> res
+                  | Some v -> set_value ~intersect:true res x v in
+                res, Rel(x,rel,px)::errs) (u, [])
 
   (** {2 Incl}                                                         *)
   (*********************************************************************)
@@ -849,10 +863,10 @@ struct
     |> List.filter_map (fun x ->
           match get ~default:uninitialized v.parents x with
           | Wrap(Root {self; value=Some value}) -> Some (Check_Value (self, value))
-          | Wrap(Child { self; parent; relation }) -> Some (Check_Rel (self, parent, relation))
+          | Wrap(Child { self; parent; relation }) -> Some (Check_Rel (self, parent, relation, None))
           | Wrap(Root _) | Wrap(Uninitialized) -> None)
     |> List.for_all (function
-      | Check_Rel(x,px,rel) -> begin match check_related u x px with
+      | Check_Rel(x,px,rel,_) -> begin match check_related u x px with
           | None -> false
           | Some rel' -> Relation.equal rel rel'
           end

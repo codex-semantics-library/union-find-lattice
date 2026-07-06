@@ -147,7 +147,7 @@ struct
       | _, None -> true
       | Some v, Some v' ->
         if Model.Value.incl node v v' then true else
-              QCheck.Test.fail_reportf "Value inclusion fails: %a has value %a is small but %a in large"
+              QCheck.Test.fail_reportf "Value inclusion fails: %a has value %a in small but %a in large"
               Model.Node.pretty node (Model.Value.pretty node) v (Model.Value.pretty node) v'
       | None, Some v ->
               QCheck.Test.fail_reportf "Value inclusion fails: %a has no value in small but %a in large"
@@ -449,37 +449,23 @@ let tests = List.fold_left (fun tests (x: (module Functor_sig.POLYMORPHIC_LABELE
 
 (* let tests = []
 
-
 let mkn n = Model.Node.IntTerm n
 let mkr r = Generator.mk_relation (Some r)
 let itv i i' = Model.Value.interval (Some (Z.of_int i))  (Some (Z.of_int i'))
 let add_relation i j r = Generator.AddRelation(mkn i, mkn j, mkr r)
 let add_value n i i' = Generator.AddValue(mkn n, itv i i')
 
-let common = [add_relation 702 56 0;
-              add_relation 56 1014 0 ]
-let size = 1016
-let left = []
-let right = [add_relation 1014 830 0;
-             add_relation 702 475 0 ]
+module Config = Union_Find_Lattice.DefaultConfig
 
+module UF = Union_Find_Lattice.PolymorphicValued.PatriciaTree(Config)(Model.Node)(Model.Relation)(Model.Value)
 
+let common = [add_relation 5 3 0;
+              add_relation 2 4 0;
+              add_value 2 0 0 ]
+let size = 6
+let left = [add_relation 4 3 (4) ]
+let right = [add_relation 5 2 0 ]
 
-
-module Config = struct
-  let path_compression = `Lazy
-  let hash_consed = false
-  let join = `Diff
-  let union_strategy = `Random
-  let extendable = false
-end
-
-module ConfigAltJoin = struct
-  include Config
-  let join = `DiffParentEdit
-end
-
-module UF = Union_Find_Lattice.Polymorphic.Patricia_tree.Make(Config)(Model.Node)(Model.Relation)(Model.Value)()
 
 let uf_op (uf, err) = function
 | Generator.AddValue(i,v) -> UF.set_value ~intersect:true uf i v, err
@@ -514,32 +500,48 @@ let check_relations_join uf_a uf_b uf_join size =
 let check_values model uf size =
   let test_pos i =
     let node = Model.Node.IntTerm i in
-    let pp = Union_Find_Lattice.Utils.Functions.pp_option Model.Value.pretty in
+    let pp = Utils.Functions.pp_option (Model.Value.pretty node) in
     let v1 = Model.get_value model node in
     let v2 = UF.get_value uf node in
     Format.printf "get_value %d: %a = %a@." i pp v1 pp v2;
     v1 = v2
   in forall test_pos (size-1)
 
+let check_values_incl small large size =
+  let test_pos i =
+    let node = Model.Node.IntTerm i in
+    match UF.get_value small node, UF.get_value large node with
+    | _, None -> true
+    | Some v, Some v' ->
+      if Model.Value.incl node v v' then true else
+            QCheck.Test.fail_reportf "Value inclusion fails: %a has value %a in small but %a in large"
+            Model.Node.pretty node (Model.Value.pretty node) v (Model.Value.pretty node) v'
+    | None, Some v ->
+            QCheck.Test.fail_reportf "Value inclusion fails: %a has no value in small but %a in large"
+            Model.Node.pretty node (Model.Value.pretty node) v
+  in forall test_pos (size-1)
+
 let () =
   let uf_c, err = List.fold_left uf_op (UF.make size, []) common in
   let uf_l, _ = List.fold_left uf_op (uf_c, []) left in
   let uf_r, _ = List.fold_left uf_op (uf_c, []) right in
-  let join = UF.join uf_l uf_r in
-  let model_c, err = List.fold_left model_op (Model.make size, []) common in
+  (* let join = UF.join uf_l uf_r in *)
+  let meet = UF.meet uf_l uf_r |> fst in
+  (* let model_c, err = List.fold_left model_op (Model.make size, []) common in
   let model_l, _ = List.fold_left model_op (Model.copy model_c, []) left in
   let model_r, _ = List.fold_left model_op (Model.copy model_c, []) right in
-  let model_join = Model.join model_l model_r in
+  let model_join = Model.join model_l model_r in*)
   Format.printf "L: @[%a@]@." UF.pretty uf_l;
   Format.printf "R: @[%a@]@." UF.pretty uf_r;
-  Format.printf "J: @[%a@]@." UF.pretty join;
-  (match UF.check_invariants join with
+  Format.printf "J: @[%a@]@." UF.pretty meet;
+  assert( check_values_incl meet uf_r size)
+  (* (match UF.check_invariants join with
    | None -> ()
    | Some err -> Format.printf "Invariants:@.%s" err; assert false);
   assert(check_relations model_c uf_c size
         && check_relations model_l uf_l size
         && check_relations model_r uf_r size
-        && check_relations model_join join size && check_relations_join uf_l uf_r join size)
+        && check_relations model_join join size && check_relations_join uf_l uf_r join size) *)
 
 
   (* match UF.check_invariants join with
