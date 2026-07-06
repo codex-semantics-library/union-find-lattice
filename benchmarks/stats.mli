@@ -22,8 +22,10 @@
 
 (** Compute various statistical indicators for a collection of values *)
 
-type exhaustive = |
-type compact = |
+(** Two separate types to distinguish stats that contain the full dataset
+    from those that only contain a summary. *)
+type exhaustive = private Exhaustive
+type compact = private Compact
 
 type ('a, 'kind) t
 (** Stats for a collection of type ['a], either [int] or [float].

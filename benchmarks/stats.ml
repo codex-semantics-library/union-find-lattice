@@ -20,8 +20,8 @@
 (*                                                                        *)
 (**************************************************************************)
 
-type exhaustive = |
-type compact = |
+type exhaustive = private Exhaustive
+type compact = private Compact
 
 type 'a number =
   | Int: int number
