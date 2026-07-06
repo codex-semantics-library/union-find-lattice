@@ -48,12 +48,11 @@
  (depends
   ocaml
   patricia-tree
-  (qcheck
-   (and
-    (> 0.90.0)
-    :with-test))
+  (qcheck (and (> 0.90.0) :with-test))
   (mdx :with-test)
-  (zarith :with-test))
+  (zarith :with-test)
+  (csv :with-dev-setup)
+  (ISO8601 :with-dev-setup))
  (tags
   ("union-find" "persistent" "lattice" "join" "meet")))
 

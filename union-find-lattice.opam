@@ -24,6 +24,8 @@ depends: [
   "qcheck" {> "0.90.0" & with-test}
   "mdx" {with-test}
   "zarith" {with-test}
+  "csv" {with-dev-setup}
+  "ISO8601" {with-dev-setup}
   "odoc" {with-doc}
 ]
 build: [

@@ -25,6 +25,10 @@ These lattice operations and the algorithms implementing the are described by
 Lesbre and Lemerre, *A Lattice of Union-Finds*, SAS 2026, specifically,
 the difference-based lattice operations using union-by-rank.
 
+This library was originally written by Dorian Lesbre and Matthieu Lemerre.
+Copyright (C) 2026 CEA (Commissariat à l'énergie atomique et aux énergies
+alternatives). It is provided here under a [LGPL v2.1 license](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html).
+
 **Contents:**
 <!-- TOC -->
 - [Data-structures](#data-structures)
@@ -104,6 +108,9 @@ cd union-find-lattice
 opan install . --deps-only
 dune build -p union-find-lattice
 dune install -p union-find-lattice
+# To build tests and benchmarks
+opan install . --deps-only --with-test --with-dev-setup
+dune build
 # To build documentation
 opam install . --deps-only --with-doc
 dune build @doc

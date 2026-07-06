@@ -17,6 +17,11 @@ These lattice operations and the algorithms implementing the are described by
 Lesbre and Lemerre, {i A Lattice of Union-Finds}, SAS 2026, specifically,
 the difference-based lattice operations using union-by-rank.
 
+This library was originally written by Dorian Lesbre and Matthieu Lemerre.
+Copyright (C) 2026 CEA (Commissariat à l'énergie atomique et aux énergies
+alternatives). It is provided here under a
+{{: https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html}LGPL v2.1 license}.
+
 {1 Data-structures}
 
 Each variant proposes four different data-structures to represent the union-find lattice:
@@ -75,10 +80,13 @@ Alternatively, clone the repository on {{: https://github.com/codex-semantics-li
 install dependencies and build locally:
 {@bash skip[
 git clone git@github.com:codex-semantics-library/union-find-lattice.git
-cd patricia-tree
+cd union-find-lattice
 opan install . --deps-only
 dune build -p union-find-lattice
 dune install -p union-find-lattice
+# To build tests and benchmarks
+opan install . --deps-only --with-test --with-dev-setup
+dune build
 # To build documentation
 opam install . --deps-only --with-doc
 dune build @doc
